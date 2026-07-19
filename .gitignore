@@ -3,4 +3,3 @@ venv
 /src/__pycache__
 instructions
 chroma_db
-data
