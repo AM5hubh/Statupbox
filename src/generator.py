@@ -3,7 +3,7 @@ from src.config import OPENAI_API_KEY
 from src.database import query_historic_facts
 from src.search import get_live_news_context
 
-def compile_quiz_data(sport, difficulty, num_questions=4, output_format="Text"):
+def compile_quiz_data(sport, difficulty, num_questions=4, output_format="Text", history=None):
     # Create query to run against ChromaDB
     db_query = f"{sport} history cup championships rules records"
     db_matches = query_historic_facts(sport=sport, query_text=db_query, n_results=2)
@@ -73,10 +73,17 @@ def compile_quiz_data(sport, difficulty, num_questions=4, output_format="Text"):
             "---"
         )
 
+    history_constraint = ""
+    if history:
+        history_constraint = "\nCRITICAL INSTRUCTION: Do NOT generate questions that are identical or highly similar to these previously asked questions:\n"
+        for item in history[:3]: # Only look at the last 3 quizzes to save tokens
+            history_constraint += f"- {item['output'][:200]}...\n"
+
     user_prompt = (
         f"Generate exactly {num_questions} unique multiple-choice questions for the sport: {sport}.\n"
         f"Difficulty target: {difficulty}.\n\n"
-        f"{format_instructions}"
+        f"{format_instructions}\n"
+        f"{history_constraint}"
     )
 
     # Make API call

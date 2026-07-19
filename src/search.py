@@ -1,7 +1,18 @@
 from ddgs import DDGS
 
+import random
+
 def get_live_news_context(sport_name):
-    search_query = f"{sport_name} latest tournament results championship winners news 2026"
+    topics = [
+        "latest tournament results 2026",
+        "recent news updates",
+        "records broken history",
+        "famous matches legendary players",
+        "championship winners cup",
+        "rules and strategies"
+    ]
+    random_topic = random.choice(topics)
+    search_query = f"{sport_name} {random_topic}"
     retrieved_texts = []
 
     print(f"Executing web search for: '{search_query}'...")

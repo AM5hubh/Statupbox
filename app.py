@@ -1,6 +1,7 @@
 import streamlit as st
 from src.generator import compile_quiz_data
-from src.database import setup_and_populate_db
+from src.database import setup_and_populate_db, bulk_add_facts_to_db
+import json
 
 # 1. Warm-up and initialize the vector DB with our offline facts on startup
 @st.cache_resource
@@ -22,6 +23,28 @@ difficulty = st.sidebar.select_slider("Select Difficulty", options=["Easy", "Med
 num_questions = st.sidebar.slider("Number of Questions", min_value=3, max_value=5, value=4)
 output_format = st.sidebar.selectbox("Output Format", ["Text", "JSON", "Markdown"])
 
+st.sidebar.divider()
+st.sidebar.header("➕ Import Knowledge")
+
+# template_json = '[\n  {\n    "sport": "Cricket",\n    "fact": "Sample fact here."\n  }\n]'
+# st.sidebar.download_button("📄 Download JSON Template", data=template_json, file_name="template.json", mime="application/json")
+
+uploaded_file = st.sidebar.file_uploader("Upload JSON Facts", type=["json"])
+if uploaded_file is not None:
+    if st.sidebar.button("Import Facts"):
+        try:
+            content = uploaded_file.getvalue().decode("utf-8").strip()
+            if not content:
+                st.sidebar.error("Error: The uploaded file is empty.")
+            else:
+                new_facts = json.loads(content)
+                count = bulk_add_facts_to_db(new_facts)
+                st.sidebar.success(f"Successfully imported {count} new facts into the database!")
+        except json.JSONDecodeError:
+            st.sidebar.error("Error: Invalid JSON format. Ensure the file contains a valid JSON array.")
+        except Exception as e:
+            st.sidebar.error(f"Error importing facts: {e}")
+
 # 4. Initialize session state to remember quizzes across page interactions
 if "quiz_output" not in st.session_state:
     st.session_state.quiz_output = None
@@ -33,7 +56,7 @@ if "quiz_history" not in st.session_state:
 if st.sidebar.button("Generate Fresh Quiz", use_container_width=True):
     with st.spinner("Fetching historical facts & scouring the live web..."):
         try:
-            quiz_text, context_used = compile_quiz_data(sport_choice, difficulty, num_questions, output_format)
+            quiz_text, context_used = compile_quiz_data(sport_choice, difficulty, num_questions, output_format, st.session_state.quiz_history)
             st.session_state.quiz_output = quiz_text
             st.session_state.quiz_context = context_used
             
@@ -98,10 +121,10 @@ if st.session_state.quiz_output:
         st.code(st.session_state.quiz_context, language="markdown")
 
 # 6. Display Quiz History
-# if st.session_state.quiz_history:
-#     st.divider()
-#     st.header("📜 Quiz History")
-#     for idx, history_item in enumerate(st.session_state.quiz_history):
-#         with st.expander(f"Quiz #{len(st.session_state.quiz_history) - idx}: {history_item['sport']} - {history_item['difficulty']} ({history_item['format']})"):
-#             language_format = "json" if history_item['format'] == "JSON" else "markdown" if history_item['format'] == "Markdown" else "text"
-#             st.code(history_item['output'], language=language_format)
+if st.session_state.quiz_history:
+    st.divider()
+    st.header("📜 Quiz History")
+    for idx, history_item in enumerate(st.session_state.quiz_history):
+        with st.expander(f"Quiz #{len(st.session_state.quiz_history) - idx}: {history_item['sport']} - {history_item['difficulty']} ({history_item['format']})"):
+            language_format = "json" if history_item['format'] == "JSON" else "markdown" if history_item['format'] == "Markdown" else "text"
+            st.code(history_item['output'], language=language_format)
