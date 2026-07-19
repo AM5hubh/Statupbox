@@ -32,7 +32,10 @@ def setup_and_populate_db(json_file_path="./data/sports_facts.json"):
 
     
     with open(json_file_path, "r") as f:
-        facts_list = json.load(f)
+        try:
+            facts_list = json.load(f)
+        except json.JSONDecodeError:
+            facts_list = []
 
     documents = []
     metadata_list = []
