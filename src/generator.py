@@ -27,7 +27,9 @@ def compile_quiz_data(sport, difficulty, num_questions=4, output_format="Text", 
         "You are an expert sports quiz creator. Your job is to write multiple-choice quizzes "
         "relying strictly on the provided Context. Avoid hallucinations. Do not use facts not "
         "found in the Context below. If facts are scarce, make do with what you have, "
-        "but keep details completely accurate to the text context.\n\n"
+        "but keep details completely accurate to the text context.\n"
+        "IMPORTANT: When writing explanations, do NOT mention 'Web Source', 'historical facts provided', "
+        "or 'the context states'. Write the explanation naturally as an authoritative trivia host.\n\n"
         f"CONTEXT DETAILS:\n{unified_context}"
     )
 
