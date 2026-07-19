@@ -47,12 +47,12 @@ def setup_and_populate_db(json_file_path="./data/sports_facts.json"):
         metadata_list.append({"sport": item["sport"]})
         ids.append(f"fact_{idx}")
 
-    
-    collection.add(
-        documents=documents,
-        metadatas=metadata_list,
-        ids=ids
-    )
+    if documents:
+        collection.add(
+            documents=documents,
+            metadatas=metadata_list,
+            ids=ids
+        )
     print(f"Successfully vectorized and stored {len(documents)} facts.")
     return collection
 
